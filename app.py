@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, render_template
 import requests
 import os
 from io import BytesIO
@@ -20,7 +20,8 @@ headers = {"Authorization": f"Bearer {HF_TOKEN}"}
 
 @app.route("/")
 def home():
-    return jsonify({"message": "Welcome to ClassLabs AI — Voice-powered intelligence!"})
+    """Futuristic UI"""
+    return render_template("index.html")
 
 
 @app.route("/stt", methods=["POST"])
@@ -36,14 +37,23 @@ def stt():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    """Text Generation via Mistral LLM"""
+    """Summarizer or chat using Mistral LLM"""
     data = request.get_json()
     if not data or "prompt" not in data:
         return jsonify({"error": "No prompt provided"}), 400
 
-    payload = {"inputs": data["prompt"]}
+    # Add summarization logic
+    prompt_text = f"Summarize this clearly and concisely:\n\n{data['prompt']}"
+    payload = {"inputs": prompt_text}
     response = requests.post(LLM_MODEL, headers=headers, json=payload)
-    return jsonify(response.json())
+
+    try:
+        result = response.json()
+        summary = result[0]["generated_text"] if isinstance(result, list) else str(result)
+    except Exception:
+        summary = "Error generating summary."
+
+    return jsonify({"summary": summary})
 
 
 @app.route("/tts", methods=["POST"])

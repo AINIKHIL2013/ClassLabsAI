@@ -2,157 +2,109 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CLASSLABS AI CONSOLE</title>
+  <title>⚡ CLASSLABS AI CONSOLE ⚡</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
-
     body {
+      background: radial-gradient(circle at center, #050510, #000);
+      color: #00ffff;
       font-family: 'Orbitron', sans-serif;
-      background: radial-gradient(circle at top, #020617, #000);
-      color: #00eaff;
-      margin: 0;
-      height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      height: 100vh;
       overflow: hidden;
     }
 
     h1 {
-      font-size: 2em;
-      letter-spacing: 2px;
-      text-shadow: 0 0 10px #00eaff, 0 0 20px #00eaff;
+      font-size: 30px;
+      text-shadow: 0 0 20px #00ffff;
       margin-bottom: 20px;
     }
 
-    .panel {
-      background: rgba(0, 15, 30, 0.8);
-      border: 1px solid #00eaff;
-      box-shadow: 0 0 20px #00eaff;
-      border-radius: 10px;
-      padding: 20px;
-      width: 90%;
-      max-width: 600px;
-    }
-
     textarea {
-      width: 100%;
+      width: 600px;
       height: 150px;
-      background: #010b1a;
-      border: 1px solid #00eaff;
-      color: #00eaff;
-      border-radius: 8px;
+      background: #0a0a1a;
+      color: #0ff;
+      border: 2px solid #0ff;
       padding: 10px;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
+      font-size: 16px;
+      border-radius: 10px;
       resize: none;
       outline: none;
-      box-shadow: 0 0 10px #00eaff inset;
-    }
-
-    .btn-container {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 15px;
+      box-shadow: 0 0 10px #0ff33;
     }
 
     button {
-      background: linear-gradient(90deg, #00eaff, #007bff);
-      color: #000;
+      background: #00ffff;
       border: none;
-      border-radius: 6px;
+      color: black;
       padding: 10px 20px;
-      cursor: pointer;
+      margin: 10px;
+      border-radius: 8px;
       font-weight: bold;
-      letter-spacing: 1px;
-      transition: 0.2s;
+      cursor: pointer;
+      transition: 0.3s;
+      font-family: 'Orbitron', sans-serif;
+      text-transform: uppercase;
     }
 
     button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px #00eaff;
+      background: #00ffff88;
+      box-shadow: 0 0 15px #00ffff;
     }
 
-    .result-box {
-      background: #010b1a;
-      border: 1px solid #00eaff;
-      border-radius: 8px;
-      color: #00eaff;
-      padding: 15px;
+    #output {
       margin-top: 20px;
-      font-size: 14px;
-      box-shadow: 0 0 10px #00eaff inset;
+      width: 600px;
+      background: #0a0a1a;
+      border: 1px solid #00ffff;
+      border-radius: 10px;
+      padding: 10px;
+      color: #00ffff;
+      font-size: 16px;
     }
 
-    .glow-line {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 4px;
-      width: 100%;
-      background: linear-gradient(90deg, transparent, #00eaff, transparent);
-      animation: moveLine 2s linear infinite;
-    }
-
-    @keyframes moveLine {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
+    audio {
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
-  <div class="glow-line"></div>
   <h1>⚡ CLASSLABS AI CONSOLE ⚡</h1>
-
-  <div class="panel">
-    <textarea id="inputText" placeholder="Enter or paste text for summarization or speech..."></textarea>
-
-    <div class="btn-container">
-      <button onclick="summarize()">Summarize</button>
-      <button onclick="generateSpeech()">Speak</button>
-      <button onclick="clearAll()">Clear</button>
-    </div>
-
-    <div id="summaryBox" class="result-box">Output will appear here...</div>
-    <audio id="audioPlayer" controls style="width: 100%; margin-top: 10px;"></audio>
+  <textarea id="inputText" placeholder="Enter your text or transcript here..."></textarea>
+  <div>
+    <button onclick="summarize()">Summarize</button>
+    <button onclick="speak()">Speak</button>
   </div>
+  <div id="output">Your summary will appear here...</div>
+  <audio id="audioPlayer" controls></audio>
 
   <script>
     async function summarize() {
-      const text = document.getElementById('inputText').value.trim();
-      if (!text) return alert("⚠️ Please enter some text first!");
-
-      const response = await fetch("/summarize", {
+      const text = document.getElementById("inputText").value;
+      const res = await fetch("/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text })
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({prompt: text})
       });
-      const data = await response.json();
-      document.getElementById("summaryBox").innerText = data.summary || "No summary generated.";
+      const data = await res.json();
+      document.getElementById("output").innerText = data.summary;
     }
 
-    async function generateSpeech() {
-      const text = document.getElementById('inputText').value.trim();
-      if (!text) return alert("⚠️ Please enter text first!");
-
-      const response = await fetch("/speak", {
+    async function speak() {
+      const text = document.getElementById("output").innerText;
+      const res = await fetch("/tts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text })
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({text})
       });
-
-      const blob = await response.blob();
+      const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      document.getElementById("audioPlayer").src = url;
-      document.getElementById("audioPlayer").play();
-    }
-
-    function clearAll() {
-      document.getElementById("inputText").value = "";
-      document.getElementById("summaryBox").innerText = "Output will appear here...";
-      document.getElementById("audioPlayer").src = "";
+      const player = document.getElementById("audioPlayer");
+      player.src = url;
+      player.play();
     }
   </script>
 </body>

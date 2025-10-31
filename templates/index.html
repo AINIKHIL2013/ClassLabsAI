@@ -1,111 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>⚡ CLASSLABS AI CONSOLE ⚡</title>
+  <meta charset="UTF-8">
+  <title>ClassLabs AI — Lecture/Lesson Summarizer</title>
   <style>
     body {
-      background: radial-gradient(circle at center, #050510, #000);
-      color: #00ffff;
-      font-family: 'Orbitron', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      overflow: hidden;
+      background: #0d1117;
+      color: #00ffc8;
+      font-family: "Orbitron", sans-serif;
+      text-align: center;
+      padding: 60px;
     }
-
-    h1 {
-      font-size: 30px;
-      text-shadow: 0 0 20px #00ffff;
-      margin-bottom: 20px;
+    h1 { font-size: 2em; letter-spacing: 1px; }
+    input[type="file"] {
+      margin: 20px 0;
+      color: #00ffc8;
     }
-
-    textarea {
-      width: 600px;
-      height: 150px;
-      background: #0a0a1a;
-      color: #0ff;
-      border: 2px solid #0ff;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 10px;
-      resize: none;
-      outline: none;
-      box-shadow: 0 0 10px #0ff33;
-    }
-
     button {
-      background: #00ffff;
+      background: #00ffc8;
       border: none;
-      color: black;
       padding: 10px 20px;
-      margin: 10px;
-      border-radius: 8px;
+      color: #000;
       font-weight: bold;
+      border-radius: 8px;
       cursor: pointer;
-      transition: 0.3s;
-      font-family: 'Orbitron', sans-serif;
-      text-transform: uppercase;
     }
-
-    button:hover {
-      background: #00ffff88;
-      box-shadow: 0 0 15px #00ffff;
-    }
-
-    #output {
-      margin-top: 20px;
-      width: 600px;
-      background: #0a0a1a;
-      border: 1px solid #00ffff;
-      border-radius: 10px;
-      padding: 10px;
-      color: #00ffff;
-      font-size: 16px;
-    }
-
-    audio {
-      margin-top: 15px;
-    }
+    audio { margin-top: 30px; }
   </style>
 </head>
 <body>
-  <h1>⚡ CLASSLABS AI CONSOLE ⚡</h1>
-  <textarea id="inputText" placeholder="Enter your text or transcript here..."></textarea>
-  <div>
-    <button onclick="summarize()">Summarize</button>
-    <button onclick="speak()">Speak</button>
-  </div>
-  <div id="output">Your summary will appear here...</div>
+  <h1>ClassLabs AI — Smart Audio Summarizer</h1>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" id="audioFile" accept="audio/*" required>
+    <br>
+    <button type="submit">Upload & Summarize</button>
+  </form>
+  <p id="status"></p>
   <audio id="audioPlayer" controls></audio>
 
   <script>
-    async function summarize() {
-      const text = document.getElementById("inputText").value;
-      const res = await fetch("/chat", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({prompt: text})
-      });
-      const data = await res.json();
-      document.getElementById("output").innerText = data.summary;
-    }
+    const form = document.getElementById("uploadForm");
+    const status = document.getElementById("status");
+    const player = document.getElementById("audioPlayer");
 
-    async function speak() {
-      const text = document.getElementById("output").innerText;
-      const res = await fetch("/tts", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({text})
-      });
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const file = document.getElementById("audioFile").files[0];
+      if (!file) return alert("Upload an audio file first!");
+      status.textContent = "Processing... Please wait (can take 1–2 min)";
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/process", { method: "POST", body: formData });
+      if (!res.ok) {
+        status.textContent = "Error during processing!";
+        return;
+      }
+
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const player = document.getElementById("audioPlayer");
       player.src = url;
-      player.play();
-    }
+      status.textContent = "Summary generated!";
+    };
   </script>
 </body>
 </html>
